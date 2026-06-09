@@ -29,7 +29,8 @@ import java.util.stream.Collectors;
 public class ConcurrentAuctionTracker {
 
     //TODO - Initialize thread-safe sorted Set implementation to store bids in descending order by amount.
-    Set<BidEntry> bids;
+    //Uncomment line below and choose the appropriate concurrent collection to store BidEntry objects sorted by amount.
+    //private final Set<BidEntry> bids;
     //TODO - Initialize a thread-safe counter to track total bid submissions and call it totalBids.
 
 
