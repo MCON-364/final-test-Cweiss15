@@ -1,5 +1,6 @@
 package edu.touro.las.mcon364.final_test;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
@@ -30,9 +31,9 @@ public class ConcurrentAuctionTracker {
 
     //TODO - Initialize thread-safe sorted Set implementation to store bids in descending order by amount.
     //Uncomment line below and choose the appropriate concurrent collection to store BidEntry objects sorted by amount.
-    //private final Set<BidEntry> bids;
+    private final ConcurrentSkipListSet<BidEntry> bids = new ConcurrentSkipListSet<>();
     //TODO - Initialize a thread-safe counter to track total bid submissions and call it totalBids.
-
+    AtomicInteger totalBids = new AtomicInteger(0);
 
     /**
      * Adds a bid entry to the tracker thread-safely and increments the counter.
@@ -41,6 +42,8 @@ public class ConcurrentAuctionTracker {
      */
     public void submitBid(BidEntry entry) {
         //TODO - implement this method
+        bids.add(entry);
+        totalBids.incrementAndGet();
     }
 
     /**
@@ -51,7 +54,7 @@ public class ConcurrentAuctionTracker {
      */
     public List<BidEntry> getTopN(int n) {
         //TODO - implement this method
-        return null;
+        return bids.stream().limit(n).toList();
     }
 
     /**
@@ -59,21 +62,34 @@ public class ConcurrentAuctionTracker {
      */
     public int getTotalBids() {
         //TODO - implement this method
-        return 0;
+        return totalBids.get();
     }
 
     /**
      * Simulates concurrent bid submissions using an ExecutorService.
-     *
+     * <p>
      * Each bidder in the list submits bidsEach random bids on a separate thread.
      * Wait for all threads to finish before returning.
      *
-     * @param bidders   list of bidder identifiers
-     * @param bidsEach  number of random bids each bidder submits
+     * @param bidders  list of bidder identifiers
+     * @param bidsEach number of random bids each bidder submits
      */
     public void runSimulation(List<String> bidders, int bidsEach)
             throws InterruptedException {
         //TODO - implement this method
+        ExecutorService executor = Executors.newFixedThreadPool(bidders.size());
+        Random random = new Random();
+        for (String b : bidders) {
+            executor.submit(() -> {
+                for (int i = 0; i < bidsEach; i++) {
+                    BidEntry entry = new BidEntry(b, random.nextInt(), System.currentTimeMillis());
+                    submitBid(entry);
+                }
+            });
+
+        }
+        executor.shutdown();
+        executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
     }
 }
 
